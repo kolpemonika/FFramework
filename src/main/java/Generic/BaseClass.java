@@ -1,219 +1,271 @@
 package Generic;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.poi.util.SystemOutLogger;
+import org.apache.poi.util.SystemOuttest;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.Assert;
 import org.testng.ITestResult;
 import org.testng.Reporter;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Optional;
+import org.testng.asserts.SoftAssert;
 
-import com.relevantcodes.extentreports.ExtentReports;
-import com.relevantcodes.extentreports.ExtentTest;
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.markuputils.ExtentColor;
+import com.aventstack.extentreports.markuputils.MarkupHelper;
+import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
+import com.aventstack.extentreports.reporter.configuration.ChartLocation;
+import com.aventstack.extentreports.reporter.configuration.Theme;
+import com.google.common.io.Files;
 import com.relevantcodes.extentreports.LogStatus;
 
+import Generic.functions.propertyFile;
+import Generic.functions.screenShot;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-public class BaseClass extends functions {
+public class BaseClass extends functions  {
 
-	//public PropertyFile p=new PropertyFile();
+	//public static String className;
+
+	public String timestamp = new SimpleDateFormat("dd-MMM-yyyy_HH-mm-ss").format(new java.util.Date());
+	protected String currentDir = System.getProperty("user.dir");
 
 	functions c = new functions();
-	
-	//public functions.propertyFile p1= c.new propertyFile();
-	
+
+	functions f = new functions();
+
 	public functions.propertyFile p = c.new propertyFile();
 	public functions.webDriverUtilities utilities = c.new webDriverUtilities();
-	public functions.AutoConstant autoConstant = c.new AutoConstant();
-	public functions.loginLogout ll = c.new loginLogout();
+	public loginLogout ll = new loginLogout();
 	public functions.screenShot ss = c.new screenShot();
 
-	
-	public WebDriver driver;
-
-	//public WebDriverUtilities utilities=new WebDriverUtilities();
-
-	static ExtentTest test;
-	static ExtentReports report;
-	
-	
-	//public String timestamp = new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss").format(new java.util.Date());
-	//dd MMM yyyy HH:mm:ss
-	public String timestamp = new SimpleDateFormat("dd-MMM-yyyy_HH-mm-ss").format(new java.util.Date());
+	static public WebDriver driver;
 
 	@BeforeTest
 	@org.testng.annotations.Parameters("browser")
 	public void launchBrowser(@Optional("chrome") String browser) throws Exception
-	{
-//		report = new ExtentReports(System.getProperty("user.dir")+autoConstant.reportPath+"ReportResults"+timestamp+".html");
-//		test = report.startTest("FrameWorkDemo");
+	{		
+		
+		String repName = "Test-Automation-Report_" + timestamp + ".html";
+		
+		extent = new ExtentReports();
+
+		htmlReporter = new ExtentHtmlReporter(currentDir+ repoPath + repName);
+		htmlReporter.config().setDocumentTitle("Automation Testing"); 
+		htmlReporter.config().setReportName("Functional Testing");
+		htmlReporter.config().setChartVisibilityOnOpen(true);
+		htmlReporter.config().setDocumentTitle("Extent Report Demo");
+		htmlReporter.config().setReportName("Test Report");
+		htmlReporter.config().setTestViewChartLocation(ChartLocation.TOP);
+		htmlReporter.config().setTheme(Theme.STANDARD);
+		htmlReporter.config().setTimeStampFormat("EEEE, MMMM dd, yyyy, hh:mm a '('zzz')'");
+
+		extent.attachReporter(htmlReporter);  //Extend report in HTML format will be generated.
+
+		//extent.addSystemInfo("Environment","Environment Name")
+		extent.setSystemInfo("Host Name", "SoftwareTestingMaterial");
+
+		extent.setSystemInfo("Environment", "Automation Testing");
+		//extent.setSystemInfo("User Name", "Rajkumar SM");
+		extent.setSystemInfo("QA Name", "Amreen");
+		extent.setSystemInfo("HostName", "Localhost");
+		extent.setSystemInfo("OS", "Windows");
+		test = extent.createTest("Browser launch");
+
+
 		if(browser.equalsIgnoreCase("firefox")){
-			//create firefox instance
-			//	System.setProperty("webdriver.gecko.driver", ".\\geckodriver.exe");
 			WebDriverManager.firefoxdriver().setup();
 
 			driver = new FirefoxDriver();
+			test.log(Status.INFO, "Firefox browser launched");
+
 		}
 
 		//Check if parameter passed as 'chrome'
 		else if(browser.equalsIgnoreCase("chrome")){
-			//set path to chromedriver.exe
-			//System.setProperty("webdriver.chrome.driver",".\\chromedriver.exe");
-
 			WebDriverManager.chromedriver().setup();
-
-			//create chrome instance
 			driver = new ChromeDriver();
+			test.log(Status.INFO, "Chrome browser launched");
+
 		}
-		
+
 		//Check if parameter passed as 'Edge'
 		else if(browser.equalsIgnoreCase("Edge")){
 			//set path to Edge.exe
 			WebDriverManager.edgedriver().setup();
-
-			//			System.setProperty("webdriver.edge.driver",".\\MicrosoftWebDriver.exe");
-			//create Edge instance
 			driver = new EdgeDriver();
+			test.log(Status.INFO, "EdgeDriver browser launched");
 		}
-		
+
 		else{
 
 			//If no browser passed throw exception
 			throw new Exception("Browser is not correct");
 			//WebDriverManager.chromedriver().setup();
+
 		}
-		
+
 		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 		WebDriverManager.chromedriver().setup();
-		//WebDriverManager.firefoxdriver().setup();
-		//WebDriverManager.edgedriver().setup();
-
-		//System.setProperty("webdriver.chrome.driver", "./driver.exe");
-
-		//driver=new ChromeDriver();
+		Thread.sleep(3000);
 		driver.manage().window().maximize();
 		driver.manage().timeouts().implicitlyWait(50, TimeUnit.SECONDS); 
-		driver.get(p.toReadDataFromPropertyFile("url"));
-		
-		Thread.sleep(3000);
-		//test.log(LogStatus.PASS,"Test Passed");
-		System.out.println(driver.getCurrentUrl());
-	}
 
-	@BeforeClass
-	public void login() throws FileNotFoundException, IOException, InterruptedException
-	{
-		report = new ExtentReports(System.getProperty("user.dir")+autoConstant.reportPath+"ReportResults"+timestamp+".html");
-		test = report.startTest("FrameWorkDemo"+timestamp);
-		if(driver.getCurrentUrl().equalsIgnoreCase("http://10.2.11.23/connectus-dummy/admin/login"))
-		{
-			test.log(LogStatus.PASS, "Navigated to the specified URL");
-			
-		}
-		else
-		{
-			test.log(LogStatus.FAIL, "Test Failed");
-		}
+		driver.get(p.toReadDataFromPropertyFile("URL"));
+		test.info("Working On : "+p.toReadDataFromPropertyFile("URL")+" URL.");
 
-		String uname = p.toReadDataFromPropertyFile("salesmanUname");
-		String pwd = p.toReadDataFromPropertyFile("salesmanPassword");
-
-		ll.loginPage(driver, uname, pwd);
-
-		Thread.sleep(5000);
+		Thread.sleep(3000); 
 
 	}
+
 	
-//	@BeforeMethod
-	public void openReport()
+	@BeforeClass
+	public void openApp() throws InterruptedException, IOException, Exception
 	{
-		report = new ExtentReports(System.getProperty("user.dir")+autoConstant.reportPath+"ReportResults"+timestamp+".html");
-		test = report.startTest("FrameWorkDemo"+timestamp);
-		if(driver.getCurrentUrl().equalsIgnoreCase("http://10.2.11.23/connectus-dummy/admin/login"))
-		{
-			test.log(LogStatus.PASS, "Navigated to the specified URL");
+		ll.loginPageWithDefaultValues(driver);
+
+	}
+ 
+	@AfterMethod
+	public void tearDown(ITestResult result) throws IOException, Exception {
+		
+		Thread.sleep(3000); 
+
+		
+		if (result.getStatus() == ITestResult.FAILURE) {
+			test.fail(new RuntimeException("msg"));
+			test.log(Status.FAIL, "TEST CASE FAILED IS " + result.getName()); // to add name in extent report
+			test.log(Status.FAIL, "TEST CASE FAILED IS " + result.getThrowable().getMessage()); // to add error/exception in extent report
+
+			test.fail("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentAshot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
+
+		} 
+		
+		else if (result.getStatus() == ITestResult.SKIP) {
 			
+			test.log(Status.SKIP, "Test Case SKIPPED IS " + result.getName());
+			test.skip("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentAshot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
 		}
-		else
-		{
-			test.log(LogStatus.FAIL, "Test Failed");
-		}
+		else if (result.getStatus() == ITestResult.SUCCESS) {
+			test.log(Status.PASS, "Test Case PASSED IS " + result.getName());
+			test.pass("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentAshot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
+		} 
 	}
 
-//	@AfterMethod
-	public void closeApp() throws IOException, InterruptedException
+	@AfterClass
+	public void closeApp() throws InterruptedException, Exception
 	{
-		report.endTest(test);
-		report.flush();
-		
+		ll.logoutPage(driver);
+	}
+
+	@AfterTest
+	public void closeBrowser() throws Exception 
+	{
+	//	ll.logoutPage(driver);
+		//	driver.close();
+		extent.flush();
+
 	}
 
 	@AfterClass
 	public void endReport() throws IOException, InterruptedException
 	{
-		
-		ll.logoutPage(driver);
+		//driver.quit();
 		Thread.sleep(3000);
-		report.endTest(test);
-		report.flush();
 	}
-	
-	@AfterTest
-	public void closeBrowser() throws IOException, InterruptedException
+
+	public void onTestSuccess(String msg) throws IOException 
 	{
-		driver.close();
+
+		test.log(Status.PASS, msg);
+		//test.log(Status.PASS, MarkupHelper.createLabel(msg, ExtentColor.GREEN));
+		test.pass("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentScreenShot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
 	}
-	/*
-	 * @AfterMethod
-	public void closeApp(ITestResult r) throws IOException
-	{
-		int status = r.getStatus();
-		String name = r.getName();
 
-		/*1=pass test case
-	 * 2=fail test case
-	 * 3=all test case
-	 */
+	public void onTestFailure(String msg) throws IOException 
+	{ 
+		test.log(Status.FAIL, msg);
+		//test.log(Status.FAIL, MarkupHelper.createLabel(msg, ExtentColor.RED));
+		test.fail("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentScreenShot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
+	}
 
-	/*	if(status==1) {
-			Reporter.log("TestCase : " + name + " is pass", true);
+	public void onTestSkipped(String msg) throws IOException
+	{	
+		test.log(Status.SKIP, msg);
+		//	test.log(Status.SKIP, tr.getThrowable());		
+		//test.log(Status.SKIP, MarkupHelper.createLabel(msg, ExtentColor.AMBER));
+		test.skip("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentScreenShot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
+	}
 
-			Photo p=new Photo();
-			p.getPhoto(driver, name);
-		}
-		else
+	public class loginLogout {
+
+		public void loginPageWithDefaultValues(WebDriver driver) throws InterruptedException, Exception, IOException
 		{
-			Reporter.log("TestCase : " + name + " is failed", true);
-			Photo p=new Photo();
+			test = extent.createTest("Logged In with Default Parameters");
 
-			p.getPhoto(driver, name);
+			driver.findElement(By.id("email")).sendKeys(p.toReadDataFromPropertyFile("Uname"));
+			Thread.sleep(3000);
+
+			driver.findElement(By.id("password")).sendKeys(p.toReadDataFromPropertyFile("pwd"));
+			Thread.sleep(3000);
+
+			driver.findElement(By.id("login")).click();
+			Thread.sleep(3000);
+
+			onTestSuccess("Logged in successfully");
 		}
-		driver.close();
-	 */
-	/*{
-			public void closeBrowser(ITestResult itestresult) throws IOException {
-				int status = itestresult.getStatus();
-				String name = itestresult.getName();
-				if (status == 1) {
-					Reporter.log("TestCase : " + name + " is pass", true);
-				} else {
-					ScreenShot.takePic(driver, name + ssExt, screenShotFolder);
-					Reporter.log("TestCase : " + name + " is fail", true);
-				}
 
-				driver.close();
-			}*/
+		public void loginPageWithPArameters(WebDriver driver, String uname, String password) throws InterruptedException, Exception
+		{		
+			String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+
+			test = extent.createTest("Logged In with Parameters");
+			driver.findElement(By.id("email")).sendKeys(uname);
+			Thread.sleep(1000);
+
+			driver.findElement(By.id("password")).sendKeys(password);
+			Thread.sleep(1000);
+
+			driver.findElement(By.id("login")).click();
+			Thread.sleep(3000);
+			onTestSuccess("Logged in successfully");
+
+		}
+		public void logoutPage(WebDriver driver) throws InterruptedException, Exception {
+
+			test = extent.createTest("LogOut Page");
+
+			driver.findElement(By.xpath("(//img[@src='http://15.207.120.175/NewTicketService/storage/app/Profile/Ashot_dailyStockAdd_dateBranchStock_2022_03_02_06_34_50.jpg'])[1]")).click();
+			Thread.sleep(3000);
+
+			driver.findElement(By.xpath("//button[text()='Signout']")).click();
+			Thread.sleep(3000);
+
+			onTestSuccess("Logged Out successfully");
+
+		} 
+	}
 }

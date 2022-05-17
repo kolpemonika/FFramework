@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -23,76 +24,51 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.Select;
 import org.testng.Assert;
+import org.testng.ITestResult;
 
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
+import com.aventstack.extentreports.reporter.ExtentReporter;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.google.common.io.Files;
 
-import Generic.CollectionTest.PropertyFile;
+import Generic.functions.propertyFile;
+import Generic.functions.screenShot;
+import extendReport.extendReport.Utility;
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
 import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 
-public class functions {
+public class functions implements autoConstant {
 	public String timestamp = new SimpleDateFormat("dd-MMM-yyyy_HH-mm-ss").format(new java.util.Date());
 	
-	//Declare all constants 
-	public class AutoConstant
-	{
-		public final String photopath="./Photo/";
+	public ExtentHtmlReporter htmlReporter;
+	public ExtentReports extent = new ExtentReports();
+	//public ExtentSparkReporter spark;
+	public ExtentTest test;
 
-		public final String datafile="./appData.properties";
-
-		public final String constant= "D:\\Amreen_Shaikh\\Eclipse\\Prototype2\\";
-		public final String currentDir = System.getProperty("user.dir");
-		public final String photo="\\photo\\";	 
-		public final String reportPath="\\ExtentReport\\";
-	}
-
-	//Login Logout
-	public class loginLogout {
-		
-		public void loginPage(WebDriver driver, String uname, String password) throws InterruptedException
-		{
-			driver.findElement(By.name("username")).sendKeys(uname);
-			Thread.sleep(3000);
-			
-			driver.findElement(By.xpath("//input[@name='password']")).sendKeys(password);
-			Thread.sleep(3000);
-			
-			driver.findElement(By.xpath("//button[@type='submit']")).click();
-			Thread.sleep(3000);
-		}
-		
-		public void logoutPage(WebDriver driver) throws InterruptedException {
-			
-			driver.findElement(By.xpath("(//a[@class='dropdown-toggle'])[3]")).click();
-			Thread.sleep(3000);
-			
-			driver.findElement(By.xpath("//a[@title='Logout']")).click();
-			Thread.sleep(3000);
-			
-			driver.findElement(By.xpath("//button[@class='confirm']")).click();
-			Thread.sleep(3000);
-		}
-
-	}
-
+	WebDriver driver;
+	
 	//read write data
-	public class propertyFile extends AutoConstant
+	public class propertyFile
 	{
-		
+
 		//PropertyFile p = new PropertyFile();
-		
+
 		public String toReadDataFromPropertyFile(String key) throws FileNotFoundException, IOException
 		{
 			Properties ps= new Properties();
 			ps.load(new FileInputStream(datafile));
 			return ps.getProperty(key);
 		}
-		
+
 		//fetch the data from Excel.
 		public String toReadDataFromExcel(int sheet, int row, int cell) throws FileNotFoundException, IOException
 		{
-			XSSFWorkbook wb = new XSSFWorkbook(toReadDataFromPropertyFile("sheet")); 
+			XSSFWorkbook wb = new XSSFWorkbook(currentDir+excelPath); 
 			XSSFSheet sh = wb.getSheetAt(sheet);
 
 			int noOfRows = sh.getPhysicalNumberOfRows();
@@ -112,7 +88,7 @@ public class functions {
 				return value;
 			}
 		}
-		
+
 		public void toWriteDataInExcel(int sheet, int row, int cell,String arg) throws FileNotFoundException, IOException, InterruptedException
 		{
 			FileOutputStream fos = new FileOutputStream(toReadDataFromPropertyFile("sheet"));
@@ -148,9 +124,9 @@ public class functions {
 			a.moveToElement(target);
 		}
 
-		public void toSwitchToFrame(WebDriver driver, int fameNo)
+		public void toSwitchToFrame(WebDriver driver, int frameNo)
 		{
-			driver.switchTo().frame(fameNo);
+			driver.switchTo().frame(frameNo);
 		}
 
 		public void toSwitchBackToFrame(WebDriver driver)
@@ -201,35 +177,132 @@ public class functions {
 		}
 
 	}
-	
+
 	//Screenstot
 	public class screenShot {
 
-		public void takeScreenShot(WebDriver driver, String constant, String photo, String className, String SSName) throws IOException
+		public void takeScreenShot(WebDriver driver, String className, String SSName) throws IOException
 		{
-			
-		//	String timestamp = new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss").format(new java.util.Date());
-			//Copy the screenshot on the desire location with different name using current date and time
-			//FileUtils.copyFile(scrFile, new File("C:/shots/" + fileName+" "+timestamp+extension));
 			TakesScreenshot ts=(TakesScreenshot)driver;
 			File src=ts.getScreenshotAs(OutputType.FILE);
-			File dest=new File(constant+photo+"SS_"+className+"_"+SSName+"_"+timestamp+".png");
+			File dest=new File(currentDir+photo+"SS_"+className+"_"+SSName+"_"+timestamp+".png");
 			Files.copy(src, dest);
 		}
-		
-		public void getAshot(WebDriver driver, String constant, String photo, String className, String SSName) throws IOException
-		{
-		
-			//String timestamp = new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss").format(new java.util.Date());
-			//JavascriptExecutor js = (JavascriptExecutor) driver;
-			
-			//String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date());
-			//js.executeScript("document.getElementsByClassName('navbar navbar-default navbar-fixed-top')[0].classList.remove('navbar-fixed-top');");
-			File fis= new File(constant+photo+"Ashot_"+className+"_"+SSName+"_"+timestamp+".png");
+
+		public void getAshot(WebDriver driver, String className, String SSName) throws IOException
+		{ 
+			File fis= new File(currentDir+photo+"Ashot_"+className+"_"+SSName+"_"+timestamp+".png");
 			Screenshot sh = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
 			ImageIO.write(sh.getImage(), "PNG", fis);
-			
+
+		}
+
+		public String extentScreenShot(WebDriver driver,String className, String ssName) throws IOException
+		{
+			TakesScreenshot ts=(TakesScreenshot)driver;
+			File src=ts.getScreenshotAs(OutputType.FILE);
+			String path=currentDir+repoPath+"SS_"+className+"_"+ssName+"_"+timestamp+".png";
+			File destination=new File(path);
+			Files.copy(src, destination);
+			return path;
+		}
+
+		public String extentAshot(WebDriver driver,String className, String ssName) throws IOException
+		{	
+		String path =currentDir+ repoPath +"Ashot_"+className+"_"+ssName+"_"+timestamp+".png";
+			File fis= new File(path);
+			Screenshot sh = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
+			ImageIO.write(sh.getImage(), "PNG", fis);
+			return path;
+
 		}
 	}
-
 }
+
+//Declare extent report
+/* public class extentReport extends propertyFile 
+	{
+		String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		String className = this.getClass().getSimpleName(); 
+
+		screenShot s = new screenShot();
+		public void toCreateExtentReport() throws FileNotFoundException, IOException
+		{
+			ExtentSparkReporter reporter=new ExtentSparkReporter(reportPath+"Report "+timestamp+".html");
+
+
+			extent = new ExtentReports();
+
+			extent.attachReporter(reporter);
+			reporter.config().setReportName(toReadDataFromPropertyFile("reportName"));
+			reporter.config().setDocumentTitle(toReadDataFromPropertyFile("docTile"));
+
+		}
+
+		public String toTakeScreenShot() throws IOException
+		{
+			TakesScreenshot ts=(TakesScreenshot) driver;
+
+			File src=ts.getScreenshotAs(OutputType.FILE);
+
+			String path=System.getProperty("user.dir")+"/Photo/"+System.currentTimeMillis()+".png";
+
+			File dest=new File(path);
+			Files.copy(src, dest);
+			return path;
+
+		}
+		public void toGeneratePassExtentReport(String msg) throws IOException
+		{
+
+			//logger=extent.createTest(className);
+			logger.log(Status.PASS, msg);
+
+			ITestResult result = null;
+			logger.pass(result.getThrowable().getMessage(),MediaEntityBuilder.createScreenCaptureFromPath(toTakeScreenShot()).build());
+
+		}
+
+		public void toGenerateFailExtentReport(String msg) throws IOException
+		{
+
+
+//			/logger=extent.createTest(className);
+			logger.log(Status.FAIL, msg);
+
+			logger.fail(result.getThrowable().getMessage(),MediaEntityBuilder.createScreenCaptureFromPath(toTakeScreenShot()).build());
+
+		}
+		public void tearDown(ITestResult result) throws IOException
+		{
+			System.out.println("Testing result");
+
+			if(result.getStatus()==ITestResult.FAILURE)
+			{
+
+
+				//test.log(LogStatus.PASS, "Navigated to the specified URL");
+
+				logger.log(Status.FAIL, "Navigated Fail");
+
+				logger.fail(result.getThrowable().getMessage(),MediaEntityBuilder.createScreenCaptureFromPath(toTakeScreenShot()).build());
+			}else { 
+
+
+				//test.log(LogStatus.PASS, "Navigated to the specified URL");
+
+				logger.log(Status.PASS, "Navigated pass");
+
+				logger.fail(result.getThrowable().getMessage(),MediaEntityBuilder.createScreenCaptureFromPath(toTakeScreenShot()).build());
+
+			}
+
+
+
+		}
+
+	}
+ */
+
+
+

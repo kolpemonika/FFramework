@@ -153,14 +153,13 @@ public class BaseClass extends functions  {
 	public void tearDown(ITestResult result) throws IOException, Exception {
 		
 		Thread.sleep(3000); 
-
 		
 		if (result.getStatus() == ITestResult.FAILURE) {
-			test.fail(new RuntimeException("msg"));
 			test.log(Status.FAIL, "TEST CASE FAILED IS " + result.getName()); // to add name in extent report
 			test.log(Status.FAIL, "TEST CASE FAILED IS " + result.getThrowable().getMessage()); // to add error/exception in extent report
 
 			test.fail("", MediaEntityBuilder.createScreenCaptureFromPath(ss.extentAshot(driver,this.getClass().getSimpleName(),Thread.currentThread().getStackTrace()[1].getMethodName())).build());
+			test.fail(new RuntimeException(result.getThrowable().getMessage()));
 
 		} 
 		

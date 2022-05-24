@@ -22,7 +22,7 @@ public class TaskPage {
 			}
 			
 		
-			@FindBy(xpath="//i[@class='icofont-pause text-danger']")
+			@FindBy(xpath="//i[@class='icofont-pause text-danger1']")
 			private WebElement pauseBtn;
 			
 			public WebElement pauseBtn()

@@ -3,21 +3,19 @@
 <suite name="Failed suite [Default suite]" guice-stage="DEVELOPMENT">
   <test thread-count="5" name="Default test(failed)">
     <classes>
-      <class name="ticketingSystem.TestScript">
+      <class name="com.ticketingSystem.Script.PlayPauseScript">
         <methods>
-          <include name="tearDown"/>
           <include name="closeApp"/>
-          <include name="closeBrowser"/>
+          <include name="tearDown"/>
           <include name="endReport"/>
-          <include name="test_04"/>
-          <include name="test_06"/>
-          <include name="test_03"/>
-          <include name="openApp"/>
           <include name="test_05"/>
-          <include name="launchBrowser"/>
+          <include name="closeBrowser"/>
           <include name="test_07"/>
+          <include name="test_06"/>
+          <include name="openApp"/>
+          <include name="launchBrowser"/>
         </methods>
-      </class> <!-- ticketingSystem.TestScript -->
+      </class> <!-- com.ticketingSystem.Script.PlayPauseScript -->
     </classes>
   </test> <!-- Default test(failed) -->
 </suite> <!-- Failed suite [Default suite] -->
